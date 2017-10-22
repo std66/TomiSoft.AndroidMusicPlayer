@@ -71,6 +71,9 @@ namespace TomiSoft.AndroidMusicPlayer
 			// aapt resource value: 0x7f050003
 			public const int PositionTrackbar = 2131034115;
 			
+			// aapt resource value: 0x7f050000
+			public const int SongTitle = 2131034112;
+			
 			// aapt resource value: 0x7f050001
 			public const int imageView1 = 2131034113;
 			
@@ -79,9 +82,6 @@ namespace TomiSoft.AndroidMusicPlayer
 			
 			// aapt resource value: 0x7f050005
 			public const int peak_right = 2131034117;
-			
-			// aapt resource value: 0x7f050000
-			public const int textView1 = 2131034112;
 			
 			static Id()
 			{

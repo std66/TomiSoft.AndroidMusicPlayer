@@ -10,7 +10,7 @@ using TomiSoft.MP3Player.Common.Playback;
 using System.ComponentModel;
 
 namespace TomiSoft.AndroidMusicPlayer {
-	[Activity(Label = "TomiSoft.AndroidMusicPlayer", MainLauncher = true, Icon = "@drawable/icon")]
+	[Activity(Label = "TomiSoft MP3 Player", MainLauncher = true, Icon = "@drawable/icon")]
 	public class MainActivity : Activity {
 		private readonly string Filename = "/storage/sdcard1/Music/Aoki Lapis - Never fading.mp3";
 
@@ -20,6 +20,9 @@ namespace TomiSoft.AndroidMusicPlayer {
 		private ProgressBar LeftPeakMeter;
 		private ProgressBar RightPeakMeter;
 		private SeekBar PositionTrackbar;
+		private TextView SongTitle;
+
+		private bool UpdatePositionTrackbar = true;
 		
 		private void InitializeComponent() {
 			Button button = FindViewById<Button>(Resource.Id.MyButton);
@@ -32,6 +35,9 @@ namespace TomiSoft.AndroidMusicPlayer {
 
 			this.PositionTrackbar = FindViewById<SeekBar>(Resource.Id.PositionTrackbar);
 			this.PositionTrackbar.StopTrackingTouch += OnSetPlaybackPosition;
+			this.PositionTrackbar.StartTrackingTouch += (o, e) => this.UpdatePositionTrackbar = false;
+
+			this.SongTitle = FindViewById<TextView>(Resource.Id.SongTitle);
 
 			FindViewById<ImageView>(Resource.Id.imageView1).SetImageResource(Resource.Drawable.ApplicationIcon);
 		}
@@ -41,6 +47,7 @@ namespace TomiSoft.AndroidMusicPlayer {
 				return;
 
 			this.PlaybackManager.Position = this.PositionTrackbar.Progress;
+			this.UpdatePositionTrackbar = true;
 		}
 
 		protected override void OnCreate(Bundle bundle) {
@@ -51,7 +58,7 @@ namespace TomiSoft.AndroidMusicPlayer {
 
 			InitializeComponent();
 			
-			BassManager.Load();
+			BassManager.Load($"{this.ApplicationInfo.NativeLibraryDir}/");
 			BassManager.InitializeOutputDevice();
 			this.PlaybackManager = PlaybackFactory.NullPlayback(100);
 		}
@@ -65,8 +72,10 @@ namespace TomiSoft.AndroidMusicPlayer {
 				this.RightPeakMeter.Progress = PeakMeter.RightPeak;
 			}
 
-			this.PositionTrackbar.Max = (int)this.PlaybackManager.Length;
-			this.PositionTrackbar.Progress = (int)this.PlaybackManager.Position;
+			if (this.UpdatePositionTrackbar) {
+				this.PositionTrackbar.Max = (int)this.PlaybackManager.Length;
+				this.PositionTrackbar.Progress = (int)this.PlaybackManager.Position;
+			}
 		}
 
 		private async void btnPlay_Click(object sender, EventArgs e) {
@@ -83,6 +92,8 @@ namespace TomiSoft.AndroidMusicPlayer {
 			this.PeakMeter = this.PlaybackManager as IAudioPeakMeter;
 
 			this.PlaybackManager.PropertyChanged += this.OnUpdate;
+			
+			this.SongTitle.Text = this.PlaybackManager.SongInfo.Title;
 
 			PlaybackManager.Volume = 100;
 			PlaybackManager.Play();

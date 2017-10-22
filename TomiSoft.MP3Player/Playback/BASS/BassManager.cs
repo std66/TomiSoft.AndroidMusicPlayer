@@ -6,6 +6,7 @@ using System.Diagnostics;
 
 using Un4seen.Bass;
 using TomiSoft.MP3Player.Utils.Extensions;
+using Android.Content.PM;
 
 namespace TomiSoft.MP3Player.Playback.BASS {
 	/// <summary>
@@ -26,12 +27,9 @@ namespace TomiSoft.MP3Player.Playback.BASS {
 		/// Stores the BASS plugins' file names that should be bundled with the application.
 		/// </summary>
 		private static readonly string[] Plugins = {
-			"basscd.dll",
-			"bassflac.dll",
-			"bassmidi.dll",
-			"basswma.dll",
-			"bass_aac.dll",
-			"bass_ac3.dll"
+			"libbassflac.so",
+			"libbassopus.so",
+			"libtags.so"
 		};
 
 		/// <summary>
@@ -66,7 +64,7 @@ namespace TomiSoft.MP3Player.Playback.BASS {
 			get {
 				#region Error checking
 				if (!BassLoaded) {
-					Trace.TraceWarning("Cannot get BassManager.BassVersion because BASS is not loaded yet.");
+					Trace.TraceWarning($"Cannot get {nameof(BassVersion)} because BASS is not loaded yet.");
 					throw new InvalidOperationException("BASS must be loaded first.");
 				}
 				#endregion
@@ -79,8 +77,9 @@ namespace TomiSoft.MP3Player.Playback.BASS {
 		/// Loads BASS and all of its plugins. BASS DLLs must be located in the directory
 		/// \Bass\x64 and \Bass\x86.
 		/// </summary>
+		/// <param name="PluginDirectory">The directory containing the BASS plugins.</param>
 		/// <returns>True if BASS is successfully loaded, false if not.</returns>
-		public static bool Load() {
+		public static bool Load(string PluginDirectory) {
 			#region Error checking
 			if (BassLoaded) {
 				Trace.TraceInformation("There's no need to load BASS library again because it is already loaded.");
@@ -88,18 +87,12 @@ namespace TomiSoft.MP3Player.Playback.BASS {
 			}
 			#endregion
 
-			string Directory = String.Format(
-				@"{0}Bass\{1}\",
-				AppDomain.CurrentDomain.BaseDirectory,
-				Environment.Is64BitProcess ? "x64" : "x86"
-			);
-
 			BassNet.Registration("sinkutamas@gmail.com", "2X28292820152222");
+			
+			LoadBassPlugins(PluginDirectory);
 
 			if (!LoadBass())
 				return false;
-
-			LoadBassPlugins(Directory);
 
 			return true;
 		}
@@ -128,8 +121,6 @@ namespace TomiSoft.MP3Player.Playback.BASS {
 					BassInitialized = false;
 				}
 			}
-
-			Bass.BASS_SetConfig(BASSConfig.BASS_CONFIG_DEV_DEFAULT, 1);
 
 			if (!Bass.BASS_Init(-1, 44100, BASSInit.BASS_DEVICE_DEFAULT, IntPtr.Zero)) {
 				Trace.TraceError($"[BASS output init] Cannot initialize BASS: (BassErrorCode={Bass.BASS_ErrorGetCode().ToString()})");
@@ -195,13 +186,13 @@ namespace TomiSoft.MP3Player.Playback.BASS {
 					continue;
 				}
 				#endregion
-
+				
 				int Result = Bass.BASS_PluginLoad(Directory + Filename);
 
 				if (Result != 0) {
 					Trace.TraceInformation($"[BASS init] Plugin loaded: {Filename}");
 
-					string PluginSupportedExtensions = Un4seen.Bass.Utils.BASSAddOnGetSupportedFileExtensions(Filename);
+					string PluginSupportedExtensions = Un4seen.Bass.Utils.BASSAddOnGetSupportedFileExtensions(Directory + Filename);
 					SupportedExtensions.AddRange(
 						PluginSupportedExtensions.GetMatches(@"\W+([\w\d]+)").Select(x => x.ToLower())
 					);
@@ -245,7 +236,7 @@ namespace TomiSoft.MP3Player.Playback.BASS {
 
 			while (LoadedPlugins.Count > 0) {
 				KeyValuePair<string, int> Plugin = LoadedPlugins.Pop();
-
+				
 				if (!Bass.BASS_PluginFree(Plugin.Value)) {
 					Trace.TraceWarning($"[BASS cleanup] Could not release plugin (Plugin: {Plugin.Key}, Handle: {Plugin.Value})");
 					Result = false;

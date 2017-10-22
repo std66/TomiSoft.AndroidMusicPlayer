@@ -6,12 +6,12 @@
     android:minWidth="25px"
     android:minHeight="25px">
     <TextView
-        android:text="Never fading"
+        android:text="Load music"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:id="@+id/textView1" />
+        android:id="@+id/SongTitle" />
     <ImageView
         android:src="@android:drawable/ic_menu_gallery"
         android:layout_width="match_parent"
@@ -24,9 +24,8 @@
         android:text="Open file" />
     <SeekBar
         android:layout_width="match_parent"
-        android:layout_height="44.0dp"
-        android:id="@+id/PositionTrackbar"
-        android:layout_marginBottom="9.0dp" />
+        android:layout_height="wrap_content"
+        android:id="@+id/PositionTrackbar" />
     <ProgressBar
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
@@ -39,6 +38,6 @@
     <ProgressBar
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
-        android:layout_height="8.5dp"
+        android:layout_height="9.5dp"
         android:id="@+id/peak_right" />
 </LinearLayout>
